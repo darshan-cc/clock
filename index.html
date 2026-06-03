@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Premium Minimal Alarm</title>
     <style>
-      /* Base Reset & Centering */
       * {
         box-sizing: border-box;
         margin: 0;
@@ -20,7 +19,7 @@
       }
 
       body {
-        background-color: #eef2f7; /* Soft off-white */
+        background-color: #eef2f7;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -38,7 +37,6 @@
         padding: 20px;
       }
 
-      /* --- PREMIUM NEUMORPHIC VISUAL DISPLAY --- */
       .timer-display-circle {
         width: 280px;
         height: 280px;
@@ -71,7 +69,6 @@
         margin-top: 8px;
       }
 
-      /* --- MINIMAL INPUT CONTROLS --- */
       .input-group {
         display: flex;
         justify-content: center;
@@ -95,7 +92,6 @@
         letter-spacing: 0.5px;
       }
 
-      /* Styled inputs to seamlessly match the premium design */
       .time-input {
         width: 70px;
         height: 50px;
@@ -112,16 +108,14 @@
           inset -3px -3px 6px #ffffff;
       }
 
-      /* Hide standard browser input arrows */
       .time-input::-webkit-outer-spin-button,
       .time-input::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
       }
 
-      /* --- ACTION BUTTONS --- */
       .btn-accent {
-        background-color: #306ee8; /* Vivid blue accent */
+        background-color: #306ee8;
         color: white;
         border: none;
         padding: 16px 40px;
@@ -152,7 +146,7 @@
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        display: none; /* Only shows when active */
+        display: none;
       }
     </style>
   </head>
@@ -203,20 +197,16 @@
       let totalSecondsRemaining = 0;
       let isAlarmActive = false;
 
-      // Auto-request notification permissions early on interaction
       window.addEventListener("DOMContentLoaded", () => {
         if (
           Notification.permission !== "granted" &&
           Notification.permission !== "denied"
         ) {
-          // We'll ask formally when they try setting the alarm
         }
       });
 
       function handleAlarmToggle() {
         if (isAlarmActive) return;
-
-        // Ask browser for desktop notification access privileges
         if (Notification.permission !== "granted") {
           Notification.requestPermission().then((permission) => {
             if (permission === "granted") {
@@ -246,7 +236,6 @@
 
         isAlarmActive = true;
 
-        // UI Adjustments
         document.getElementById("inputContainer").style.opacity = "0.4";
         document.getElementById("inputHours").disabled = true;
         document.getElementById("inputMinutes").disabled = true;
@@ -255,8 +244,6 @@
         document.getElementById("displayStatus").innerText = "Running";
 
         updateDisplayString();
-
-        // Fire off background tracking ticking system
         countdownInterval = setInterval(() => {
           totalSecondsRemaining--;
           updateDisplayString();
@@ -279,24 +266,22 @@
       }
 
       function triggerAlarmNotification() {
-        // Check authorization state parameters
         if (Notification.permission === "granted") {
           new Notification("Alarm Complete", {
             body: "Your customized countdown period has ended!",
-            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827311.png", // Clean systemic indicator icon
+            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827311.png",
           });
         }
 
-        // Clean browser window fallback audio indicator
         const audioCtx = new (
           window.AudioContext || window.webkitAudioContext
         )();
         const oscillator = audioCtx.createOscillator();
         oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Crisp A5 musical tone note pitch
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
         oscillator.connect(audioCtx.destination);
         oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 1.5); // Ring clearly for 1.5 seconds
+        oscillator.stop(audioCtx.currentTime + 1.5);
       }
 
       function resetAlarm() {
@@ -305,7 +290,6 @@
         totalSecondsRemaining = 0;
         isAlarmActive = false;
 
-        // Restore UI parameters back to baseline options
         document.getElementById("inputContainer").style.opacity = "1";
         document.getElementById("inputHours").disabled = false;
         document.getElementById("inputMinutes").disabled = false;
