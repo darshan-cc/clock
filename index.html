@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium Minimal Alarm</title>
+    <style>
+      /* Base Reset & Centering */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+
+      body {
+        background-color: #eef2f7; /* Soft off-white */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: #111;
+      }
+
+      .alarm-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+      }
+
+      /* --- PREMIUM NEUMORPHIC VISUAL DISPLAY --- */
+      .timer-display-circle {
+        width: 280px;
+        height: 280px;
+        background: #eef2f7;
+        border-radius: 50%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow:
+          14px 14px 28px #d1d9e6,
+          -14px -14px 28px #ffffff;
+        margin-bottom: 40px;
+      }
+
+      .countdown-digits {
+        font-size: 48px;
+        font-weight: 300;
+        letter-spacing: -1px;
+        color: #111;
+      }
+
+      .status-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #a0a4a8;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-top: 8px;
+      }
+
+      /* --- MINIMAL INPUT CONTROLS --- */
+      .input-group {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+        width: 100%;
+      }
+
+      .input-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .input-box label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a0a4a8;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+
+      /* Styled inputs to seamlessly match the premium design */
+      .time-input {
+        width: 70px;
+        height: 50px;
+        background: #eef2f7;
+        border: none;
+        outline: none;
+        border-radius: 12px;
+        font-size: 20px;
+        font-weight: 500;
+        text-align: center;
+        color: #111;
+        box-shadow:
+          inset 3px 3px 6px #d1d9e6,
+          inset -3px -3px 6px #ffffff;
+      }
+
+      /* Hide standard browser input arrows */
+      .time-input::-webkit-outer-spin-button,
+      .time-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* --- ACTION BUTTONS --- */
+      .btn-accent {
+        background-color: #306ee8; /* Vivid blue accent */
+        color: white;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 30px;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        box-shadow: 0 6px 15px rgba(48, 110, 232, 0.25);
+        transition: all 0.2s ease;
+        width: 200px;
+      }
+
+      .btn-accent:hover {
+        background-color: #255bc4;
+        transform: translateY(-1px);
+      }
+
+      .btn-accent:active {
+        transform: translateY(1px);
+      }
+
+      .btn-reset {
+        background-color: transparent;
+        color: #e85d5d;
+        border: none;
+        margin-top: 15px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: none; /* Only shows when active */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="alarm-container">
+      <div class="timer-display-circle">
+        <div class="countdown-digits" id="displayTime">00:00:00</div>
+        <div class="status-label" id="displayStatus">Ready</div>
+      </div>
+
+      <div class="input-group" id="inputContainer">
+        <div class="input-box">
+          <label>Hours</label>
+          <input
+            type="number"
+            class="time-input"
+            id="inputHours"
+            min="0"
+            max="23"
+            placeholder="00"
+            value="1"
+          />
+        </div>
+        <div class="input-box">
+          <label>Minutes</label>
+          <input
+            type="number"
+            class="time-input"
+            id="inputMinutes"
+            min="0"
+            max="59"
+            placeholder="00"
+            value="0"
+          />
+        </div>
+      </div>
+
+      <button class="btn-accent" id="actionBtn" onclick="handleAlarmToggle()">
+        Set Alarm
+      </button>
+      <button class="btn-reset" id="resetBtn" onclick="resetAlarm()">
+        Cancel
+      </button>
+    </div>
+
+    <script>
+      let countdownInterval = null;
+      let totalSecondsRemaining = 0;
+      let isAlarmActive = false;
+
+      // Auto-request notification permissions early on interaction
+      window.addEventListener("DOMContentLoaded", () => {
+        if (
+          Notification.permission !== "granted" &&
+          Notification.permission !== "denied"
+        ) {
+          // We'll ask formally when they try setting the alarm
+        }
+      });
+
+      function handleAlarmToggle() {
+        if (isAlarmActive) return;
+
+        // Ask browser for desktop notification access privileges
+        if (Notification.permission !== "granted") {
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              startAlarmSequence();
+            } else {
+              alert(
+                "Notification permission is required for the alarm to alert you when backgrounded.",
+              );
+            }
+          });
+        } else {
+          startAlarmSequence();
+        }
+      }
+
+      function startAlarmSequence() {
+        const hrs = parseInt(document.getElementById("inputHours").value) || 0;
+        const mins =
+          parseInt(document.getElementById("inputMinutes").value) || 0;
+
+        totalSecondsRemaining = hrs * 3600 + mins * 60;
+
+        if (totalSecondsRemaining <= 0) {
+          alert("Please enter a duration greater than 0.");
+          return;
+        }
+
+        isAlarmActive = true;
+
+        // UI Adjustments
+        document.getElementById("inputContainer").style.opacity = "0.4";
+        document.getElementById("inputHours").disabled = true;
+        document.getElementById("inputMinutes").disabled = true;
+        document.getElementById("actionBtn").style.display = "none";
+        document.getElementById("resetBtn").style.display = "block";
+        document.getElementById("displayStatus").innerText = "Running";
+
+        updateDisplayString();
+
+        // Fire off background tracking ticking system
+        countdownInterval = setInterval(() => {
+          totalSecondsRemaining--;
+          updateDisplayString();
+
+          if (totalSecondsRemaining <= 0) {
+            triggerAlarmNotification();
+            resetAlarm();
+          }
+        }, 1000);
+      }
+
+      function updateDisplayString() {
+        const hrs = Math.floor(totalSecondsRemaining / 3600);
+        const mins = Math.floor((totalSecondsRemaining % 3600) / 60);
+        const secs = totalSecondsRemaining % 60;
+
+        const format = (num) => String(num).padStart(2, "0");
+        document.getElementById("displayTime").innerText =
+          `${format(hrs)}:${format(mins)}:${format(secs)}`;
+      }
+
+      function triggerAlarmNotification() {
+        // Check authorization state parameters
+        if (Notification.permission === "granted") {
+          new Notification("Alarm Complete", {
+            body: "Your customized countdown period has ended!",
+            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827311.png", // Clean systemic indicator icon
+          });
+        }
+
+        // Clean browser window fallback audio indicator
+        const audioCtx = new (
+          window.AudioContext || window.webkitAudioContext
+        )();
+        const oscillator = audioCtx.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Crisp A5 musical tone note pitch
+        oscillator.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 1.5); // Ring clearly for 1.5 seconds
+      }
+
+      function resetAlarm() {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        totalSecondsRemaining = 0;
+        isAlarmActive = false;
+
+        // Restore UI parameters back to baseline options
+        document.getElementById("inputContainer").style.opacity = "1";
+        document.getElementById("inputHours").disabled = false;
+        document.getElementById("inputMinutes").disabled = false;
+        document.getElementById("actionBtn").style.display = "block";
+        document.getElementById("resetBtn").style.display = "none";
+        document.getElementById("displayStatus").innerText = "Ready";
+        document.getElementById("displayTime").innerText = "00:00:00";
+      }
+    </script>
+  </body>
+</html>
